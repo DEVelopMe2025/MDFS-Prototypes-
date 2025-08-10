@@ -1,0 +1,1626 @@
+Just a few Concepts im tinkering around with 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiDimensional OS Prototype </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1a1a1a;
+            --tertiary-bg: #2a2a2a;
+            --accent-primary: #00ff88;
+            --accent-secondary: #0088ff;
+            --accent-tertiary: #ff0088;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #808080;
+            --glass-bg: rgba(0, 255, 136, 0.05);
+            --glass-border: rgba(0, 255, 136, 0.2);
+            --shadow-glow: 0 0 20px rgba(0, 255, 136, 0.3);
+            --shadow-intense: 0 0 40px rgba(0, 255, 136, 0.5);
+            --border-radius: 12px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #1a1a2e 50%, #16213e 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Enhanced animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 136, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 0, 136, 0.1) 0%, transparent 50%);
+            animation: backgroundPulse 15s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes backgroundPulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .os-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Enhanced sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 2px solid var(--glass-border);
+            padding: 24px;
+            overflow-y: auto;
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0, 255, 136, 0.02) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+        }
+
+        .main-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Enhanced header */
+        .header {
+            height: 70px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: var(--shadow-glow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo::before {
+            content: '🌌';
+            font-size: 32px;
+            filter: drop-shadow(0 0 10px var(--accent-primary));
+        }
+
+        .system-info {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            transition: var(--transition-smooth);
+        }
+
+        .info-item:hover {
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* Enhanced workspace */
+        .workspace {
+            flex: 1;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workspace-header {
+            padding: 20px 32px;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .workspace-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workspace-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .control-button {
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .control-button:hover {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .dimensional-grid {
+            flex: 1;
+            position: relative;
+            perspective: 1200px;
+            overflow: hidden;
+        }
+
+        .dimension-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Enhanced file nodes */
+        .file-node {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--glass-bg), rgba(0, 136, 255, 0.1));
+            border: 2px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            font-size: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-node:hover {
+            transform: scale(1.15) translateZ(20px);
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-intense);
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 136, 255, 0.2));
+        }
+
+        .file-node.selected {
+            border-color: var(--accent-secondary);
+            background: linear-gradient(135deg, rgba(0, 136, 255, 0.3), rgba(255, 0, 136, 0.2));
+            box-shadow: 0 0 30px rgba(0, 136, 255, 0.5);
+        }
+
+        .file-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Enhanced dimension controls */
+        .dimension-controls {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            z-index: 100;
+            min-width: 280px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--accent-primary);
+        }
+
+        .control-slider {
+            width: 100%;
+            height: 6px;
+            background: var(--secondary-bg);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--shadow-glow);
+            transition: var(--transition-smooth);
+        }
+
+        .control-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: var(--shadow-intense);
+        }
+
+        .control-value {
+            float: right;
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Enhanced terminal */
+        .terminal {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 250px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid var(--glass-border);
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            overflow-y: auto;
+            transform: translateY(220px);
+            transition: var(--transition-smooth);
+        }
+
+        .terminal.active {
+            transform: translateY(0);
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .terminal-title {
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .terminal-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .terminal-output {
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .terminal-prompt {
+            color: var(--accent-primary);
+            margin-right: 8px;
+        }
+
+        .terminal-command {
+            color: var(--accent-secondary);
+        }
+
+        .terminal-result {
+            color: var(--text-secondary);
+            margin-left: 16px;
+        }
+
+        .terminal-input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: inherit;
+            width: 100%;
+            outline: none;
+            caret-color: var(--accent-primary);
+        }
+
+        /* Enhanced namespace tree */
+        .namespace-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            margin-bottom: 4px;
+            border-radius: 0 8px 8px 0;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .namespace-item:hover {
+            border-left-color: var(--accent-primary);
+            background: var(--glass-bg);
+            transform: translateX(4px);
+        }
+
+        .namespace-item.active {
+            border-left-color: var(--accent-secondary);
+            background: rgba(0, 136, 255, 0.1);
+            color: var(--accent-secondary);
+        }
+
+        .namespace-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Enhanced process list */
+        .process-item {
+            padding: 12px 16px;
+            margin: 8px 0;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 13px;
+            transition: var(--transition-smooth);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .process-item:hover {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .process-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .process-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: rgba(0, 255, 136, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        /* Enhanced boot sequence */
+        .boot-sequence {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-bg);
+            color: var(--accent-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 2s ease;
+        }
+
+        .boot-logo {
+            font-size: 64px;
+            margin-bottom: 32px;
+            animation: logoGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes logoGlow {
+            0% { filter: drop-shadow(0 0 20px var(--accent-primary)); }
+            100% { filter: drop-shadow(0 0 40px var(--accent-secondary)); }
+        }
+
+        .boot-text {
+            font-size: 18px;
+            margin: 12px 0;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .boot-progress {
+            width: 300px;
+            height: 4px;
+            background: var(--secondary-bg);
+            border-radius: 2px;
+            margin-top: 32px;
+            overflow: hidden;
+        }
+
+        .boot-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            width: 0%;
+            animation: bootProgress 5s ease-out forwards;
+        }
+
+        @keyframes bootProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 280px;
+            }
+            
+            .dimension-controls {
+                min-width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .os-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 2px solid var(--glass-border);
+            }
+            
+            .dimension-controls {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 16px;
+                min-width: auto;
+            }
+            
+            .terminal {
+                height: 200px;
+                transform: translateY(170px);
+            }
+        }
+
+        /* Accessibility improvements */
+        .file-node:focus,
+        .namespace-item:focus,
+        .control-button:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* Performance optimizations */
+        .file-node,
+        .namespace-item,
+        .process-item {
+            will-change: transform;
+        }
+
+        /* Enhanced glitch effect */
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(-2px) skew(-1deg); }
+            20% { transform: translateX(2px) skew(1deg); }
+            30% { transform: translateX(-1px) skew(-0.5deg); }
+            40% { transform: translateX(1px) skew(0.5deg); }
+            50% { transform: translateX(-2px) skew(-1deg); }
+            60% { transform: translateX(2px) skew(1deg); }
+            70% { transform: translateX(-1px) skew(-0.5deg); }
+            80% { transform: translateX(1px) skew(0.5deg); }
+            90% { transform: translateX(-2px) skew(-1deg); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Loading states */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Enhanced Boot Sequence -->
+    <div class="boot-sequence" id="bootSequence">
+        <div class="boot-logo">🌌</div>
+        <div class="boot-text" style="animation-delay: 0s;">MultiDimensional OS Pro v3.0</div>
+        <div class="boot-text" style="animation-delay: 1s;">Initializing quantum protocols...</div>
+        <div class="boot-text" style="animation-delay: 2s;">Loading dimensional file system...</div>
+        <div class="boot-text" style="animation-delay: 3s;">Establishing namespace unions...</div>
+        <div class="boot-text" style="animation-delay: 4s;">Activating AI subsystems...</div>
+        <div class="boot-text" style="animation-delay: 5s;">System ready.</div>
+        <div class="boot-progress">
+            <div class="boot-progress-fill"></div>
+        </div>
+    </div>
+
+    <div class="os-container" id="osContainer" style="display: none;">
+        <!-- Enhanced Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">
+                    <span>📁</span>
+                    Namespace Tree
+                </h3>
+                <div class="namespace-tree">
+                    <div class="namespace-item active" data-namespace="root">
+                        <span class="namespace-icon">🏠</span>
+                        <span>/ (root)</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="proc">
+                        <span class="namespace-icon">⚙️</span>
+                        <span>/proc</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="net">
+                        <span class="namespace-icon">🌐</span>
+                        <span>/net</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="srv">
+                        <span class="namespace-icon">🔧</span>
+                        <span>/srv</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="dev">
+                        <span class="namespace-icon">💾</span>
+                        <span>/dev</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="mnt">
+                        <span class="namespace-icon">📂</span>
+                        <span>/mnt</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="usr">
+                        <span class="namespace-icon">👤</span>
+                        <span>/usr</span>
+                    </div>
+                    <div class="namespace-item" data-namespace="tmp">
+                        <span class="namespace-icon">🗂️</span>
+                        <span>/tmp</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">
+                    <span>🔄</span>
+                    Active Processes
+                </h3>
+                <div class="process-list" id="processList">
+                    <div class="process-item">
+                        <span class="process-name">rio</span>
+                        <span class="process-status">running</span>
+                    </div>
+                    <div class="process-item">
+                        <span class="process-name">fossil</span>
+                        <span class="process-status">active</span>
+                    </div>
+                    <div class="process-item">
+                        <span class="process-name">venti</span>
+                        <span class="process-status">archiving</span>
+                    </div>
+                    <div class="process-item">
+                        <span class="process-name">factotum</span>
+                        <span class="process-status">auth</span>
+                    </div>
+                    <div class="process-item">
+                        <span class="process-name">plumber</span>
+                        <span class="process-status">routing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-view">
+            <!-- Enhanced Header -->
+            <div class="header">
+                <div class="logo">MultiDimensional OS Pro</div>
+                <div class="system-info">
+                    <div class="info-item">
+                        <div class="status-dot"></div>
+                        <span id="currentTime"></span>
+                    </div>
+                    <div class="info-item">
+                        <span>📍</span>
+                        <span id="currentNamespace">/</span>
+                    </div>
+                    <div class="info-item">
+                        <span>🌌</span>
+                        <span>Dimension: <span id="currentDimension">0</span></span>
+                    </div>
+                    <div class="info-item">
+                        <span>🧠</span>
+                        <span>AI: Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Workspace -->
+            <div class="workspace">
+                <div class="workspace-header">
+                    <div class="workspace-title">Dimensional File Explorer</div>
+                    <div class="workspace-controls">
+                        <button class="control-button" onclick="refreshView()">🔄 Refresh</button>
+                        <button class="control-button" onclick="toggleView()">👁️ View</button>
+                        <button class="control-button" onclick="searchFiles()">🔍 Search</button>
+                        <button class="control-button" onclick="toggleTerminal()">💻 Terminal</button>
+                    </div>
+                </div>
+
+                <div class="dimensional-grid" id="dimensionalGrid">
+                    <div class="dimension-layer" id="dimensionLayer"></div>
+                </div>
+
+                <!-- Enhanced Dimension Controls -->
+                <div class="dimension-controls">
+                    <div class="control-group">
+                        <label class="control-label">
+                            X Rotation
+                            <span class="control-value" id="rotationXValue">0°</span>
+                        </label>
+                        <input type="range" class="control-slider" id="rotationX" min="-180" max="180" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            Y Rotation
+                            <span class="control-value" id="rotationYValue">0°</span>
+                        </label>
+                        <input type="range" class="control-slider" id="rotationY" min="-180" max="180" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            Z Depth
+                            <span class="control-value" id="zDepthValue">0px</span>
+                        </label>
+                        <input type="range" class="control-slider" id="zDepth" min="0" max="500" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            Dimension
+                            <span class="control-value" id="dimensionValue">0</span>
+                        </label>
+                        <input type="range" class="control-slider" id="dimensionSlider" min="0" max="4" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            Scale
+                            <span class="control-value" id="scaleValue">1.0x</span>
+                        </label>
+                        <input type="range" class="control-slider" id="scaleSlider" min="0.5" max="2" step="0.1" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Terminal -->
+            <div class="terminal" id="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-title">MultiDimensional Terminal</div>
+                    <button class="terminal-toggle" onclick="toggleTerminal()">Toggle</button>
+                </div>
+                <div class="terminal-output" id="terminalOutput">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">mdos@quantum:~$</span>
+                        <span class="terminal-command">system status</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-result">✓ All quantum systems operational</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-result">✓ Dimensional protocols active</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-result">✓ AI subsystems online</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-result">✓ Network connectivity stable</span>
+                    </div>
+                </div>
+                <div class="terminal-input-container">
+                    <span class="terminal-prompt">mdos@quantum:~$</span>
+                    <input type="text" class="terminal-input" id="terminalInput" placeholder="Enter command...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MultiDimensionalOSPro {
+            constructor() {
+                this.currentNamespace = '/';
+                this.currentDimension = 0;
+                this.selectedFiles = new Set();
+                this.fileSystem = this.initializeAdvancedFileSystem();
+                this.processes = this.initializeProcesses();
+                this.terminalHistory = [];
+                this.commandHistory = [];
+                this.historyIndex = -1;
+                this.isTerminalVisible = false;
+                this.viewMode = 'dimensional'; // dimensional, list, grid
+                this.init();
+            }
+
+            init() {
+                this.bootSequence();
+                this.setupEventListeners();
+                this.createFileNodes();
+                this.startSystemClock();
+                this.spawnInitialProcesses();
+                this.initializeAI();
+            }
+
+            bootSequence() {
+                setTimeout(() => {
+                    document.getElementById('bootSequence').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('bootSequence').style.display = 'none';
+                        document.getElementById('osContainer').style.display = 'flex';
+                        this.addTerminalLine('🚀 MultiDimensional OS Pro initialized successfully', 'system');
+                    }, 2000);
+                }, 6000);
+            }
+
+            initializeAdvancedFileSystem() {
+                return {
+                    '/': {
+                        type: 'directory',
+                        children: ['bin', 'usr', 'dev', 'proc', 'net', 'srv', 'mnt', 'tmp', 'quantum', 'ai'],
+                        metadata: { created: new Date(), size: 4096, permissions: 'drwxr-xr-x', owner: 'root' }
+                    },
+                    '/bin': {
+                        type: 'directory',
+                        children: ['rc', 'ls', 'cat', 'echo', 'mount', 'quantum-calc', 'ai-assist'],
+                        metadata: { created: new Date(), size: 2048, permissions: 'drwxr-xr-x', owner: 'root' }
+                    },
+                    '/usr': {
+                        type: 'directory', 
+                        children: ['glenda', 'sys', 'local', 'share'],
+                        metadata: { created: new Date(), size: 1024, permissions: 'drwxr-xr-x', owner: 'root' }
+                    },
+                    '/dev': {
+                        type: 'directory',
+                        children: ['cons', 'null', 'zero', 'random', 'quantum-rng', 'neural-net'],
+                        metadata: { created: new Date(), size: 512, permissions: 'drwxr-xr-x', owner: 'root' }
+                    },
+                    '/proc': {
+                        type: 'directory',
+                        children: ['1', '2', '3', '4', '5', 'quantum', 'ai-core'],
+                        metadata: { created: new Date(), size: 1024, permissions: 'dr-xr-xr-x', owner: 'root' }
+                    },
+                    '/quantum': {
+                        type: 'directory',
+                        children: ['entanglement.db', 'superposition.log', 'decoherence.conf'],
+                        metadata: { created: new Date(), size: 2048, permissions: 'drwx------', owner: 'quantum' }
+                    },
+                    '/ai': {
+                        type: 'directory',
+                        children: ['neural-networks', 'learning-models', 'decision-trees', 'knowledge-base'],
+                        metadata: { created: new Date(), size: 4096, permissions: 'drwx------', owner: 'ai-core' }
+                    }
+                };
+            }
+
+            initializeProcesses() {
+                return [
+                    { name: 'rio', status: 'running', cpu: 2.3, memory: 45.2, description: 'Window manager' },
+                    { name: 'fossil', status: 'active', cpu: 1.8, memory: 128.5, description: 'File server' },
+                    { name: 'venti', status: 'archiving', cpu: 0.9, memory: 67.3, description: 'Archival storage' },
+                    { name: 'factotum', status: 'auth', cpu: 0.2, memory: 12.1, description: 'Authentication agent' },
+                    { name: 'plumber', status: 'routing', cpu: 0.5, memory: 8.7, description: 'Message router' },
+                    { name: 'quantum-core', status: 'computing', cpu: 15.7, memory: 256.8, description: 'Quantum processor' },
+                    { name: 'ai-assistant', status: 'learning', cpu: 8.4, memory: 189.3, description: 'AI subsystem' }
+                ];
+            }
+
+            initializeAI() {
+                this.aiResponses = {
+                    'help': 'Available AI commands: analyze, predict, optimize, learn, status',
+                    'analyze': 'Analyzing current system state... All parameters within optimal ranges.',
+                    'predict': 'Predicting system behavior... Performance will remain stable for next 24 hours.',
+                    'optimize': 'Optimizing system resources... Performance increased by 12%.',
+                    'learn': 'Learning from user patterns... Knowledge base updated.',
+                    'status': 'AI Status: Online | Learning: Active | Confidence: 94.7%'
+                };
+            }
+
+            createFileNodes() {
+                const layer = document.getElementById('dimensionLayer');
+                layer.innerHTML = '';
+                
+                const currentFiles = this.getCurrentDirectoryFiles();
+                
+                currentFiles.forEach((file, index) => {
+                    const node = document.createElement('div');
+                    node.className = 'file-node';
+                    node.dataset.filename = file;
+                    node.innerHTML = `
+                        <div class="file-icon">${this.getFileIcon(file)}</div>
+                        <div class="file-name">${file}</div>
+                    `;
+                    
+                    // Enhanced 3D positioning with quantum randomness
+                    const angle = (index / currentFiles.length) * 2 * Math.PI;
+                    const radius = 180 + (this.currentDimension * 60) + (Math.random() * 40 - 20);
+                    const x = Math.cos(angle) * radius + window.innerWidth / 2 - 50;
+                    const y = Math.sin(angle) * radius + window.innerHeight / 2 - 50;
+                    const z = (index % 5) * 80 - 160 + (Math.random() * 40 - 20);
+                    
+                    node.style.left = x + 'px';
+                    node.style.top = y + 'px';
+                    node.style.transform = `translateZ(${z}px)`;
+                    
+                    // Enhanced event listeners
+                    node.addEventListener('click', (e) => this.handleFileClick(file, e));
+                    node.addEventListener('dblclick', () => this.openFile(file));
+                    node.addEventListener('contextmenu', (e) => this.showContextMenu(file, e));
+                    
+                    layer.appendChild(node);
+                });
+            }
+
+            getCurrentDirectoryFiles() {
+                const current = this.fileSystem[this.currentNamespace];
+                return current ? current.children || [] : [];
+            }
+
+            getFileIcon(filename) {
+                const fullPath = this.currentNamespace === '/' ? 
+                    '/' + filename : 
+                    this.currentNamespace + '/' + filename;
+                
+                if (this.fileSystem[fullPath]?.type === 'directory') {
+                    const specialDirs = {
+                        'quantum': '⚛️',
+                        'ai': '🧠',
+                        'neural-networks': '🕸️',
+                        'bin': '⚙️',
+                        'dev': '💾',
+                        'proc': '🔄',
+                        'net': '🌐',
+                        'srv': '🔧',
+                        'mnt': '📂',
+                        'usr': '👤',
+                        'tmp': '🗂️'
+                    };
+                    return specialDirs[filename] || '📁';
+                }
+                
+                const ext = filename.split('.').pop().toLowerCase();
+                const icons = {
+                    'txt': '📄', 'doc': '📄', 'pdf': '📄', 'md': '📝',
+                    'jpg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'svg': '🎨',
+                    'mp3': '🎵', 'wav': '🎵', 'mp4': '🎬', 'avi': '🎬',
+                    'exe': '⚙️', 'bin': '⚙️', 'sh': '📜', 'py': '🐍',
+                    'js': '📜', 'html': '🌐', 'css': '🎨', 'json': '📋',
+                    'db': '🗄️', 'log': '📊', 'conf': '⚙️', 'config': '⚙️'
+                };
+                return icons[ext] || '📄';
+            }
+
+            handleFileClick(filename, event) {
+                const node = event.currentTarget;
+                
+                if (event.ctrlKey || event.metaKey) {
+                    // Multi-select
+                    if (this.selectedFiles.has(filename)) {
+                        this.selectedFiles.delete(filename);
+                        node.classList.remove('selected');
+                    } else {
+                        this.selectedFiles.add(filename);
+                        node.classList.add('selected');
+                    }
+                } else {
+                    // Single select
+                    document.querySelectorAll('.file-node').forEach(n => n.classList.remove('selected'));
+                    this.selectedFiles.clear();
+                    this.selectedFiles.add(filename);
+                    node.classList.add('selected');
+                }
+                
+                this.addTerminalLine(`Selected: ${filename}`, 'info');
+            }
+
+            openFile(filename) {
+                const fullPath = this.currentNamespace === '/' ? 
+                    '/' + filename : 
+                    this.currentNamespace + '/' + filename;
+                
+                if (this.fileSystem[fullPath]?.type === 'directory') {
+                    this.currentNamespace = fullPath;
+                    this.updateNamespaceDisplay();
+                    this.createFileNodes();
+                    this.addTerminalLine(`Changed to directory: ${fullPath}`, 'success');
+                } else {
+                    this.addTerminalLine(`Opening file: ${filename}`, 'info');
+                    // Enhanced file opening with AI assistance
+                    setTimeout(() => {
+                        this.addTerminalLine(`File opened with AI-enhanced editor`, 'success');
+                        this.simulateFileAnalysis(filename);
+                    }, 500);
+                }
+            }
+
+            simulateFileAnalysis(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                const analysisResults = {
+                    'log': `Log analysis: ${Math.floor(Math.random() * 1000)} entries, ${Math.floor(Math.random() * 50)} warnings`,
+                    'db': `Database analysis: ${Math.floor(Math.random() * 10000)} records, integrity: ${90 + Math.floor(Math.random() * 10)}%`,
+                    'conf': `Configuration analysis: ${Math.floor(Math.random() * 20)} parameters, all valid`,
+                    'py': `Code analysis: ${Math.floor(Math.random() * 500)} lines, complexity: moderate`,
+                    'js': `Script analysis: ${Math.floor(Math.random() * 300)} lines, ${Math.floor(Math.random() * 5)} potential optimizations`
+                };
+                
+                const result = analysisResults[ext] || `File analysis: ${Math.floor(Math.random() * 1000)} bytes, type: ${ext}`;
+                setTimeout(() => {
+                    this.addTerminalLine(`🧠 AI Analysis: ${result}`, 'ai');
+                }, 1000);
+            }
+
+            showContextMenu(filename, event) {
+                event.preventDefault();
+                // Context menu implementation would go here
+                this.addTerminalLine(`Context menu for: ${filename}`, 'info');
+            }
+
+            updateNamespaceDisplay() {
+                document.getElementById('currentNamespace').textContent = this.currentNamespace;
+                
+                // Update namespace tree active state
+                document.querySelectorAll('.namespace-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.namespace === this.getNamespaceKey()) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+
+            getNamespaceKey() {
+                const namespaceMap = {
+                    '/': 'root',
+                    '/proc': 'proc',
+                    '/net': 'net',
+                    '/srv': 'srv',
+                    '/dev': 'dev',
+                    '/mnt': 'mnt',
+                    '/usr': 'usr',
+                    '/tmp': 'tmp'
+                };
+                return namespaceMap[this.currentNamespace] || 'root';
+            }
+
+            setupEventListeners() {
+                // Enhanced dimension controls
+                const controls = ['rotationX', 'rotationY', 'zDepth', 'dimensionSlider', 'scaleSlider'];
+                controls.forEach(controlId => {
+                    const control = document.getElementById(controlId);
+                    control.addEventListener('input', () => {
+                        this.updateDimensionView();
+                        this.updateControlValues();
+                    });
+                });
+
+                // Namespace navigation
+                document.querySelectorAll('.namespace-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        document.querySelectorAll('.namespace-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        
+                        const namespace = item.getAttribute('data-namespace');
+                        this.navigateToNamespace(namespace);
+                    });
+                });
+
+                // Enhanced terminal
+                const terminalInput = document.getElementById('terminalInput');
+                terminalInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.executeCommand(terminalInput.value);
+                        this.commandHistory.unshift(terminalInput.value);
+                        this.historyIndex = -1;
+                        terminalInput.value = '';
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (this.historyIndex < this.commandHistory.length - 1) {
+                            this.historyIndex++;
+                            terminalInput.value = this.commandHistory[this.historyIndex];
+                        }
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (this.historyIndex > 0) {
+                            this.historyIndex--;
+                            terminalInput.value = this.commandHistory[this.historyIndex];
+                        } else if (this.historyIndex === 0) {
+                            this.historyIndex = -1;
+                            terminalInput.value = '';
+                        }
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key) {
+                            case 't':
+                                e.preventDefault();
+                                this.toggleTerminal();
+                                break;
+                            case 'r':
+                                e.preventDefault();
+                                this.refreshView();
+                                break;
+                            case 'f':
+                                e.preventDefault();
+                                this.searchFiles();
+                                break;
+                            case 'a':
+                                e.preventDefault();
+                                this.selectAllFiles();
+                                break;
+                        }
+                    } else if (e.key === 'Escape') {
+                        this.clearSelection();
+                    }
+                });
+            }
+
+            updateDimensionView() {
+                const rotationX = document.getElementById('rotationX').value;
+                const rotationY = document.getElementById('rotationY').value;
+                const zDepth = document.getElementById('zDepth').value;
+                const scale = document.getElementById('scaleSlider').value;
+                
+                const layer = document.getElementById('dimensionLayer');
+                layer.style.transform = `
+                    rotateX(${rotationX}deg) 
+                    rotateY(${rotationY}deg) 
+                    translateZ(${zDepth}px)
+                    scale(${scale})
+                `;
+            }
+
+            updateControlValues() {
+                document.getElementById('rotationXValue').textContent = document.getElementById('rotationX').value + '°';
+                document.getElementById('rotationYValue').textContent = document.getElementById('rotationY').value + '°';
+                document.getElementById('zDepthValue').textContent = document.getElementById('zDepth').value + 'px';
+                document.getElementById('dimensionValue').textContent = document.getElementById('dimensionSlider').value;
+                document.getElementById('scaleValue').textContent = document.getElementById('scaleSlider').value + 'x';
+            }
+
+            navigateToNamespace(namespace) {
+                const namespaceMap = {
+                    'root': '/',
+                    'proc': '/proc',
+                    'net': '/net',
+                    'srv': '/srv',
+                    'dev': '/dev',
+                    'mnt': '/mnt',
+                    'usr': '/usr',
+                    'tmp': '/tmp'
+                };
+                
+                const targetPath = namespaceMap[namespace] || '/';
+                this.currentNamespace = targetPath;
+                this.updateNamespaceDisplay();
+                this.createFileNodes();
+                this.addTerminalLine(`Navigated to: ${targetPath}`, 'success');
+            }
+
+            executeCommand(command) {
+                this.addTerminalLine(command, 'command');
+                const [cmd, ...args] = command.trim().split(' ');
+
+                switch (cmd.toLowerCase()) {
+                    case 'help':
+                        this.showHelp();
+                        break;
+                    case 'ls':
+                    case 'dir':
+                        this.listDirectory(args[0]);
+                        break;
+                    case 'cd':
+                        this.changeDirectory(args[0]);
+                        break;
+                    case 'clear':
+                    case 'cls':
+                        this.clearTerminal();
+                        break;
+                    case 'system':
+                    case 'status':
+                        this.displaySystemInfo();
+                        break;
+                    case 'ps':
+                        this.listProcesses();
+                        break;
+                    case 'quantum':
+                        this.quantumCommand(args);
+                        break;
+                    case 'ai':
+                        this.aiCommand(args);
+                        break;
+                    case 'dimension':
+                        this.dimensionCommand(args);
+                        break;
+                    case 'search':
+                    case 'find':
+                        this.searchCommand(args);
+                        break;
+                    case 'analyze':
+                        this.analyzeSystem();
+                        break;
+                    default:
+                        this.addTerminalLine(`Command not found: ${cmd}. Type 'help' for available commands.`, 'error');
+                }
+            }
+
+            showHelp() {
+                const helpText = [
+                    'Available commands:',
+                    '  ls, dir          - List directory contents',
+                    '  cd <path>        - Change directory',
+                    '  clear, cls       - Clear terminal',
+                    '  system, status   - Show system information',
+                    '  ps               - List running processes',
+                    '  quantum <cmd>    - Quantum operations',
+                    '  ai <cmd>         - AI assistant commands',
+                    '  dimension <n>    - Switch to dimension n',
+                    '  search <term>    - Search files',
+                    '  analyze          - Analyze system performance',
+                    '  help             - Show this help'
+                ];
+                helpText.forEach(line => this.addTerminalLine(line, 'info'));
+            }
+
+            listDirectory(path = this.currentNamespace) {
+                const dir = this.fileSystem[path];
+                if (!dir || dir.type !== 'directory') {
+                    this.addTerminalLine(`ls: cannot access '${path}': No such directory`, 'error');
+                    return;
+                }
+                if (dir.contents && dir.contents.length === 0) {
+                    this.addTerminalLine('(empty directory)', 'info');
+                } else if (dir.children) {
+                    dir.children.forEach(item => {
+                        const itemPath = path === '/' ? `/${item}` : `${path}/${item}`;
+                        const itemType = this.fileSystem[itemPath]?.type || 'file';
+                        const icon = itemType === 'directory' ? '📁' : '📄';
+                        this.addTerminalLine(`${icon} ${item}`, 'info');
+                    });
+                }
+            }
+
+            changeDirectory(path) {
+                if (!path) {
+                    this.addTerminalLine(`Current directory: ${this.currentNamespace}`, 'info');
+                    return;
+                }
+
+                let targetPath;
+                if (path === '..') {
+                    const parts = this.currentNamespace.split('/').filter(p => p);
+                    parts.pop();
+                    targetPath = '/' + parts.join('/');
+                    if (targetPath === '//') targetPath = '/';
+                } else if (path.startsWith('/')) {
+                    targetPath = path;
+                } else {
+                    targetPath = this.currentNamespace === '/' ? `/${path}` : `${this.currentNamespace}/${path}`;
+                }
+
+                if (this.fileSystem[targetPath] && this.fileSystem[targetPath].type === 'directory') {
+                    this.currentNamespace = targetPath;
+                    this.updateNamespaceDisplay();
+                    this.createFileNodes();
+                    this.addTerminalLine(`Changed directory to ${targetPath}`, 'success');
+                } else {
+                    this.addTerminalLine(`cd: no such file or directory: ${path}`, 'error');
+                }
+            }
+
+            clearTerminal() {
+                document.getElementById('terminalOutput').innerHTML = '';
+            }
+
+            displaySystemInfo() {
+                const info = [
+                    `System: MultiDimensional OS Pro v3.0`,
+                    `Uptime: ${this.getUptime()}`,
+                    `Current Namespace: ${this.currentNamespace}`,
+                    `Active Dimension: ${this.currentDimension}`,
+                    `Processes: ${this.processes.length} running`,
+                    `Memory Usage: ${this.getMemoryUsage()}`,
+                    `Quantum State: Entangled`,
+                    `AI Status: Learning (Confidence: 94.7%)`
+                ];
+                info.forEach(line => this.addTerminalLine(line, 'info'));
+            }
+
+            listProcesses() {
+                this.addTerminalLine('PID  NAME           STATUS      CPU%   MEM(MB)', 'info');
+                this.addTerminalLine('---  ----           ------      ----   -------', 'info');
+                this.processes.forEach((proc, index) => {
+                    const pid = (index + 1).toString().padEnd(4);
+                    const name = proc.name.padEnd(14);
+                    const status = proc.status.padEnd(10);
+                    const cpu = proc.cpu.toFixed(1).padStart(5);
+                    const mem = proc.memory.toFixed(1).padStart(7);
+                    this.addTerminalLine(`${pid} ${name} ${status} ${cpu}   ${mem}`, 'info');
+                });
+            }
+
+            quantumCommand(args) {
+                const subcommand = args[0];
+                switch (subcommand) {
+                    case 'entangle':
+                        this.addTerminalLine('🔗 Quantum entanglement initiated...', 'quantum');
+                        setTimeout(() => {
+                            this.addTerminalLine('✓ Particles successfully entangled', 'success');
+                        }, 1500);
+                        break;
+                    case 'superposition':
+                        this.addTerminalLine('⚛️ Creating quantum superposition...', 'quantum');
+                        setTimeout(() => {
+                            this.addTerminalLine('✓ System now exists in multiple states simultaneously', 'success');
+                        }, 2000);
+                        break;
+                    case 'collapse':
+                        this.addTerminalLine('📉 Collapsing wave function...', 'quantum');
+                        setTimeout(() => {
+                            this.addTerminalLine('✓ Reality stabilized to current state', 'success');
+                        }, 1000);
+                        break;
+                    default:
+                        this.addTerminalLine('Quantum commands: entangle, superposition, collapse', 'info');
+                }
+            }
+
+            aiCommand(args) {
+                const subcommand = args[0];
+                const response = this.aiResponses[subcommand] || 'AI command not recognized. Available: help, analyze, predict, optimize, learn, status';
+                this.addTerminalLine(`🧠 AI: ${response}`, 'ai');
+            }
+
+            dimensionCommand(args) {
+                const dimension = parseInt(args[0]);
+                if (isNaN(dimension) || dimension < 0 || dimension > 4) {
+                    this.addTerminalLine('Dimension must be between 0 and 4', 'error');
+                    return;
+                }
+                
+                this.currentDimension = dimension;
+                document.getElementById('currentDimension').textContent = dimension;
+                document.getElementById('dimensionSlider').value = dimension;
+                this.createFileNodes();
+                this.addTerminalLine(`Switched to dimension ${dimension}`, 'success');
+            }
+
+            searchCommand(args) {
+                const term = args.join(' ');
+                if (!term) {
+                    this.addTerminalLine('Usage: search <term>', 'error');
+                    return;
+                }
+                
+                this.addTerminalLine(`🔍 Searching for: ${term}`, 'info');
+                // Simulate search
+                setTimeout(() => {
+                    const results = Math.floor(Math.random() * 10) + 1;
+                    this.addTerminalLine(`Found ${results} matches for "${term}"`, 'success');
+                }, 1000);
+            }
+
+            analyzeSystem() {
+                this.addTerminalLine('🔍 Analyzing system performance...', 'info');
+                setTimeout(() => {
+                    const metrics = [
+                        `CPU Usage: ${(Math.random() * 30 + 10).toFixed(1)}%`,
+                        `Memory Usage: ${(Math.random() * 40 + 30).toFixed(1)}%`,
+                        `Disk I/O: ${(Math.random() * 20 + 5).toFixed(1)}%`,
+                        `Network: ${(Math.random() * 50 + 20).toFixed(1)} Mbps`,
+                        `Quantum Coherence: ${(Math.random() * 20 + 80).toFixed(1)}%`,
+                        `AI Learning Rate: ${(Math.random() * 10 + 90).toFixed(1)}%`
+                    ];
+                    metrics.forEach(metric => this.addTerminalLine(`  ${metric}`, 'info'));
+                    this.addTerminalLine('✓ System analysis complete', 'success');
+                }, 2000);
+            }
+
+            addTerminalLine(text, type = 'output') {
+                const output = document.getElementById('terminalOutput');
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                
+                const timestamp = new Date().toLocaleTimeString();
+                
+                switch (type) {
+                    case 'command':
+                        line.innerHTML = `<span class="terminal-prompt">mdos@quantum:~$</span> <span class="terminal-command">${text}</span>`;
+                        break;
+                    case 'error':
+                        line.innerHTML = `<span class="terminal-result" style="color: var(--accent-tertiary);">❌ ${text}</span>`;
+                        break;
+                    case 'success':
+                        line.innerHTML = `<span class="terminal-result" style="color: var(--accent-primary);">✓ ${text}</span>`;
+                        break;
+                    case 'quantum':
+                        line.innerHTML = `<span class="terminal-result" style="color: var(--accent-secondary);">⚛️ ${text}</span>`;
+                        break;
+                    case 'ai':
+                        line.innerHTML = `<span class="terminal-result" style="color: #ff6b6b;">🧠 ${text}</span>`;
+                        break;
+                    case 'system':
+                        line.innerHTML = `<span class="terminal-result" style="color: #ffd93d;">[${timestamp}] ${text}</span>`;
+                        break;
+                    default:
+                        line.innerHTML = `<span class="terminal-result">${text}</span>`;
+                }
+                
+                output.appendChild(line);
+                output.scrollTop = output.scrollHeight;
+
+                // Keep terminal history manageable
+                while (output.children.length > 100) {
+                    output.removeChild(output.firstChild);
+                }
+            }
+
+            startSystemClock() {
+                const updateTime = () => {
+                    const now = new Date();
+                    document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+                };
+                updateTime();
+                setInterval(updateTime, 1000);
+            }
+
+            spawnInitialProcesses() {
+                // Simulate process activity
+                setInterval(() => {
+                    this.processes.forEach(proc => {
+                        proc.cpu = Math.max(0.1, proc.cpu + (Math.random() - 0.5) * 2);
+                        proc.memory = Math.max(1, proc.memory + (Math.random() - 0.5) * 10);
+                    });
+                }, 5000);
+            }
+
+            getUptime() {
+                const start = new Date();
+                const uptime = Math.floor((Date.now() - start.getTime()) / 1000);
+                const hours = Math.floor(uptime / 3600);
+                const minutes = Math.floor((uptime % 3600) / 60);
+                const seconds = uptime % 60;
+                return `${hours}h ${minutes}m ${seconds}s`;
+            }
+
+            getMemoryUsage() {
+                const total = this.processes.reduce((sum, proc) => sum + proc.memory, 0);
+                return `${total.toFixed(1)}MB / 2048MB (${(total/2048*100).toFixed(1)}%)`;
+            }
+
+            // Global functions for button handlers
+            refreshView() {
+                this.createFileNodes();
+                this.addTerminalLine('🔄 View refreshed', 'success');
+            }
+
+            toggleView() {
+                const modes = ['dimensional', 'list', 'grid'];
+                const currentIndex = modes.indexOf(this.viewMode);
+                this.viewMode = modes[(currentIndex + 1) % modes.length];
+                this.addTerminalLine(`👁️ Switched to ${this.viewMode} view`, 'info');
+                // View mode implementation would go here
+            }
+
+            searchFiles() {
+                const term = prompt('Enter search term:');
+                if (term) {
+                    this.searchCommand([term]);
+                }
+            }
+
+            toggleTerminal() {
+                const terminal = document.getElementById('terminal');
+                this.isTerminalVisible = !this.isTerminalVisible;
+                terminal.classList.toggle('active', this.isTerminalVisible);
+                
+                if (this.isTerminalVisible) {
+                    document.getElementById('terminalInput').focus();
+                }
+            }
+
+            selectAllFiles() {
+                const files = this.getCurrentDirectoryFiles();
+                this.selectedFiles.clear();
+                files.forEach(file => this.selectedFiles.add(file));
+                
+                document.querySelectorAll('.file-node').forEach(node => {
+                    node.classList.add('selected');
+                });
+                
+                this.addTerminalLine(`Selected ${files.length} files`, 'info');
+            }
+
+            clearSelection() {
+                this.selectedFiles.clear();
+                document.querySelectorAll('.file-node').forEach(node => {
+                    node.classList.remove('selected');
+                });
+            }
+        }
+
+        // Initialize the system
+        let mdos;
+        document.addEventListener('DOMContentLoaded', () => {
+            mdos = new MultiDimensionalOSPro();
+        });
+
+        // Global function bindings for onclick handlers
+        function refreshView() { mdos.refreshView(); }
+        function toggleView() { mdos.toggleView(); }
+        function searchFiles() { mdos.searchFiles(); }
+        function toggleTerminal() { mdos.toggleTerminal(); }
+    </script>
+</body>
+</html>
